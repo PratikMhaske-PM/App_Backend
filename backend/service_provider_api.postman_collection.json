@@ -1,0 +1,445 @@
+{
+  "info": {
+    "name": "Service Provider Application API Suite",
+    "description": "Comprehensive Postman test collection covering all Authentication, Categories, Workers, Bookings, Reviews, User Profile, and Admin APIs with test assertions.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5001",
+      "type": "string"
+    },
+    {
+      "key": "customerToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "workerToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "bookingId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "reviewId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/",
+          "host": ["{{baseUrl}}"],
+          "path": [""]
+        }
+      }
+    },
+    {
+      "name": "2. Auth - Register Customer",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"sarah.test@example.com\",\n  \"password\": \"SecurePassword123!\",\n  \"name\": \"Sarah Test\",\n  \"phone\": \"+1-555-0155\",\n  \"role\": \"customer\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/register",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "register"]
+        }
+      }
+    },
+    {
+      "name": "3. Auth - Login Customer",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData.data && jsonData.data.accessToken) {",
+              "    pm.collectionVariables.set('customerToken', jsonData.data.accessToken);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "4. Auth - Login Worker",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData.data && jsonData.data.accessToken) {",
+              "    pm.collectionVariables.set('workerToken', jsonData.data.accessToken);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"worker@example.com\",\n  \"password\": \"Password123!\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "5. Auth - Login Admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData.data && jsonData.data.accessToken) {",
+              "    pm.collectionVariables.set('adminToken', jsonData.data.accessToken);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"Password123!\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "6. Categories - List All",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/categories",
+          "host": ["{{baseUrl}}"],
+          "path": ["categories"]
+        }
+      }
+    },
+    {
+      "name": "7. Categories - Detail",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/categories/cat_electrical",
+          "host": ["{{baseUrl}}"],
+          "path": ["categories", "cat_electrical"]
+        }
+      }
+    },
+    {
+      "name": "8. Workers - Search and Filter",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/workers?category_id=cat_electrical&page=1&limit=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["workers"],
+          "query": [
+            { "key": "category_id", "value": "cat_electrical" },
+            { "key": "page", "value": "1" },
+            { "key": "limit", "value": "10" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "9. Workers - Detail",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/workers/wrk_demo_1",
+          "host": ["{{baseUrl}}"],
+          "path": ["workers", "wrk_demo_1"]
+        }
+      }
+    },
+    {
+      "name": "10. Workers - Update Availability",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{workerToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"is_available\": true,\n  \"availability_status\": \"available\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/workers/me/availability",
+          "host": ["{{baseUrl}}"],
+          "path": ["workers", "me", "availability"]
+        }
+      }
+    },
+    {
+      "name": "11. Workers - Dashboard Stats",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{workerToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/workers/me/stats",
+          "host": ["{{baseUrl}}"],
+          "path": ["workers", "me", "stats"]
+        }
+      }
+    },
+    {
+      "name": "12. API 1: Create Booking (POST /bookings)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData.data && jsonData.data.id) {",
+              "    pm.collectionVariables.set('bookingId', jsonData.data.id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{customerToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"worker_id\": \"wrk_demo_1\",\n  \"category_id\": \"cat_electrical\",\n  \"service_description\": \"Fix flickering lights and circuit inspection\",\n  \"booking_date\": \"2026-11-25\",\n  \"booking_time\": \"10:00\",\n  \"address\": \"742 Evergreen Terrace, Springfield\",\n  \"latitude\": 40.7128,\n  \"longitude\": -74.006,\n  \"total_price\": 70.0\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/bookings",
+          "host": ["{{baseUrl}}"],
+          "path": ["bookings"]
+        }
+      }
+    },
+    {
+      "name": "13. API 2: Get My Bookings (GET /bookings/me)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/bookings/me?status=PENDING&page=1&limit=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["bookings", "me"],
+          "query": [
+            { "key": "status", "value": "PENDING" },
+            { "key": "page", "value": "1" },
+            { "key": "limit", "value": "10" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "14. API 3: Get Booking Details (GET /bookings/:id)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/bookings/{{bookingId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["bookings", "{{bookingId}}"]
+        }
+      }
+    },
+    {
+      "name": "15. API 5: Get Booking QR Code (GET /bookings/:id/qr)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/bookings/{{bookingId}}/qr",
+          "host": ["{{baseUrl}}"],
+          "path": ["bookings", "{{bookingId}}", "qr"]
+        }
+      }
+    },
+    {
+      "name": "16. API 4: Cancel Booking (PATCH /bookings/:id/cancel)",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{customerToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cancellation_reason\": \"Emergency travel schedule change\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/bookings/{{bookingId}}/cancel",
+          "host": ["{{baseUrl}}"],
+          "path": ["bookings", "{{bookingId}}", "cancel"]
+        }
+      }
+    },
+    {
+      "name": "17. Bookings - Accept (Worker)",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{workerToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/bookings/{{bookingId}}/accept",
+          "host": ["{{baseUrl}}"],
+          "path": ["bookings", "{{bookingId}}", "accept"]
+        }
+      }
+    },
+    {
+      "name": "18. Bookings - Complete (Worker)",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{workerToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/bookings/{{bookingId}}/complete",
+          "host": ["{{baseUrl}}"],
+          "path": ["bookings", "{{bookingId}}", "complete"]
+        }
+      }
+    },
+    {
+      "name": "16. Reviews - Submit for Completed Booking",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData.data && jsonData.data.id) {",
+              "    pm.collectionVariables.set('reviewId', jsonData.data.id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{customerToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": \"{{bookingId}}\",\n  \"rating\": 5,\n  \"comment\": \"Outstanding service, on time and high quality work!\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/reviews",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "reviews"]
+        }
+      }
+    },
+    {
+      "name": "17. Reviews - Detail",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/reviews/{{reviewId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "reviews", "{{reviewId}}"]
+        }
+      }
+    },
+    {
+      "name": "18. Users - Profile Me",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/users/me",
+          "host": ["{{baseUrl}}"],
+          "path": ["users", "me"]
+        }
+      }
+    },
+    {
+      "name": "19. Admin - System Stats",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/admin/stats",
+          "host": ["{{baseUrl}}"],
+          "path": ["admin", "stats"]
+        }
+      }
+    }
+  ]
+}

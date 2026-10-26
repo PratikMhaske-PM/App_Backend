@@ -1,0 +1,347 @@
+### Service Provider Application Backend API Tests
+### Base URL
+@baseUrl = http://localhost:5001
+
+###############################################################################
+# 1. ROOT & HEALTH CHECK
+###############################################################################
+
+### 1.1 Health Check
+GET {{baseUrl}}/
+Accept: application/json
+
+###############################################################################
+# 2. AUTHENTICATION & REGISTRATION
+###############################################################################
+
+### 2.1 Register New Customer
+# @name registerCustomer
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Sarah Connor",
+  "email": "sarah.connor@example.com",
+  "password": "SecurePassword123!",
+  "phone": "+1-555-0155",
+  "role": "customer"
+}
+
+### 2.2 Register New Worker
+# @name registerWorker
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "John Carpenter",
+  "email": "john.carpenter@example.com",
+  "password": "SecurePassword123!",
+  "phone": "+1-555-0188",
+  "role": "worker"
+}
+
+### 2.3 Login as Pre-Seeded Demo Customer
+# @name loginCustomer
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "Password123!"
+}
+
+### Save customer token from response
+@customerToken = {{loginCustomer.response.body.data.accessToken}}
+
+### 2.4 Login as Pre-Seeded Demo Worker
+# @name loginWorker
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "worker@example.com",
+  "password": "Password123!"
+}
+
+### Save worker token from response
+@workerToken = {{loginWorker.response.body.data.accessToken}}
+
+### 2.5 Login as Pre-Seeded Demo Admin
+# @name loginAdmin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "Password123!"
+}
+
+### Save admin token from response
+@adminToken = {{loginAdmin.response.body.data.accessToken}}
+
+### 2.6 Fetch Authenticated User Payload
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{customerToken}}
+
+###############################################################################
+# 3. SERVICE CATEGORIES
+###############################################################################
+
+### 3.1 Fetch All Categories
+GET {{baseUrl}}/categories
+Accept: application/json
+
+### 3.2 Fetch All Categories via /api Prefix
+GET {{baseUrl}}/api/categories
+Accept: application/json
+
+### 3.3 Fetch Single Category by ID
+GET {{baseUrl}}/categories/cat_electrical
+Accept: application/json
+
+### 3.4 Fetch Single Category by Slug
+GET {{baseUrl}}/categories/plumbing
+Accept: application/json
+
+###############################################################################
+# 4. WORKERS DIRECTORY & DASHBOARD
+###############################################################################
+
+### 4.1 Search & Filter Workers (Category + Pagination + Sort)
+GET {{baseUrl}}/workers?category_id=cat_electrical&page=1&limit=10&sort_by=rating&order=desc
+Accept: application/json
+
+### 4.2 Text Search Workers
+GET {{baseUrl}}/workers?search=Electrician
+Accept: application/json
+
+### 4.3 Fetch Worker Details
+GET {{baseUrl}}/workers/wrk_demo_1
+Accept: application/json
+
+### 4.4 Fetch Worker Reviews
+GET {{baseUrl}}/workers/wrk_demo_1/reviews?page=1&limit=10
+Accept: application/json
+
+### 4.5 Worker Updates Availability (Worker Only)
+PATCH {{baseUrl}}/workers/me/availability
+Authorization: Bearer {{workerToken}}
+Content-Type: application/json
+
+{
+  "is_available": true,
+  "availability_status": "available"
+}
+
+### 4.6 Fetch Worker Dashboard Statistics (Worker Only)
+GET {{baseUrl}}/workers/me/stats
+Authorization: Bearer {{workerToken}}
+Accept: application/json
+
+### 4.7 Fetch Worker Own Profile (Worker Only)
+GET {{baseUrl}}/workers/me/profile
+Authorization: Bearer {{workerToken}}
+Accept: application/json
+
+### 4.8 Update Worker Own Profile (Worker Only)
+PATCH {{baseUrl}}/workers/me/profile
+Authorization: Bearer {{workerToken}}
+Content-Type: application/json
+
+{
+  "title": "Master Licensed Electrician",
+  "hourly_rate": 70.0,
+  "experience_years": 9,
+  "location": "New York Metro Area"
+}
+
+###############################################################################
+# 5. BOOKINGS MANAGEMENT MODULE (APIs 1-5)
+###############################################################################
+
+### API 1: Create Booking (POST /bookings)
+# @name createBooking
+POST {{baseUrl}}/bookings
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "worker_id": "wrk_demo_1",
+  "category_id": "cat_electrical",
+  "service_description": "Fix flickering ceiling lights and circuit breaker inspection",
+  "booking_date": "2026-11-25",
+  "booking_time": "10:00",
+  "address": "742 Evergreen Terrace, Springfield",
+  "latitude": 40.7128,
+  "longitude": -74.0060,
+  "total_price": 70.0
+}
+
+### Save created booking ID
+@bookingId = {{createBooking.response.body.data.id}}
+
+### API 2: Get My Bookings (GET /bookings/me?status=&page=&limit=)
+GET {{baseUrl}}/bookings/me?status=PENDING&page=1&limit=10
+Authorization: Bearer {{customerToken}}
+Accept: application/json
+
+### API 3: Get Booking Details (GET /bookings/:id)
+GET {{baseUrl}}/bookings/{{bookingId}}
+Authorization: Bearer {{customerToken}}
+Accept: application/json
+
+### API 5: Get Booking QR Code (GET /bookings/:id/qr)
+GET {{baseUrl}}/bookings/{{bookingId}}/qr
+Authorization: Bearer {{customerToken}}
+Accept: application/json
+
+### Worker Accepts Booking (Preparation for completion)
+PATCH {{baseUrl}}/bookings/{{bookingId}}/accept
+Authorization: Bearer {{workerToken}}
+Accept: application/json
+
+### Worker Completes Booking
+PATCH {{baseUrl}}/bookings/{{bookingId}}/complete
+Authorization: Bearer {{workerToken}}
+Accept: application/json
+
+### Create Another Booking Specifically For Cancellation Test
+# @name createCancelBooking
+POST {{baseUrl}}/bookings
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "worker_id": "wrk_demo_1",
+  "category_id": "cat_electrical",
+  "service_description": "Job to test cancellation flow",
+  "booking_date": "2026-11-28",
+  "booking_time": "14:00",
+  "address": "100 Cancel Lane, Springfield",
+  "total_price": 65.0
+}
+
+@cancelBookingId = {{createCancelBooking.response.body.data.id}}
+
+### API 4: Cancel Booking (PATCH /bookings/:id/cancel)
+PATCH {{baseUrl}}/bookings/{{cancelBookingId}}/cancel
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "cancellation_reason": "Emergency travel required, need to reschedule"
+}
+
+###############################################################################
+# 6. REVIEWS
+###############################################################################
+
+### 6.1 Submit Review for Completed Booking (Customer Only)
+# @name createReview
+POST {{baseUrl}}/api/reviews
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "booking_id": "{{bookingId}}",
+  "rating": 5,
+  "comment": "Punctual, highly professional, and diagnosed the wiring fault within minutes!"
+}
+
+### Save created review ID
+@reviewId = {{createReview.response.body.data.id}}
+
+### 6.2 Fetch Single Review by ID
+GET {{baseUrl}}/api/reviews/{{reviewId}}
+Accept: application/json
+
+### 6.3 Customer Updates Own Review
+PATCH {{baseUrl}}/api/reviews/{{reviewId}}
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "rating": 5,
+  "comment": "Updated: Still the highest quality electrical repair service in the area!"
+}
+
+### 6.4 Delete Own Review
+# DELETE {{baseUrl}}/api/reviews/{{reviewId}}
+# Authorization: Bearer {{customerToken}}
+
+###############################################################################
+# 7. USER PROFILE MANAGEMENT
+###############################################################################
+
+### 7.1 Fetch Authenticated User Profile
+GET {{baseUrl}}/users/me
+Authorization: Bearer {{customerToken}}
+Accept: application/json
+
+### 7.2 Update User Profile
+PATCH {{baseUrl}}/users/me
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "name": "Sarah Connor",
+  "phone": "+1-555-0199",
+  "avatar_url": "https://example.com/avatar.jpg"
+}
+
+### 7.3 Change Password
+PATCH {{baseUrl}}/users/me/password
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "current_password": "Password123!",
+  "new_password": "NewSecurePassword456!"
+}
+
+###############################################################################
+# 8. ADMIN MANAGEMENT & WORKER VERIFICATION
+###############################################################################
+
+### 8.1 Admin Lists All Workers
+GET {{baseUrl}}/admin/workers
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### 8.2 Admin Verifies Worker Profile
+PATCH {{baseUrl}}/admin/workers/wrk_demo_1/verify
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "approved"
+}
+
+### 8.3 Admin System-Wide Statistics
+GET {{baseUrl}}/admin/stats
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+###############################################################################
+# 9. NEGATIVE SECURITY TESTS
+###############################################################################
+
+### 9.1 Non-Admin Blocked from Admin Endpoints (Expect 403 Forbidden)
+GET {{baseUrl}}/admin/stats
+Authorization: Bearer {{customerToken}}
+
+### 9.2 Unauthenticated Request Blocked (Expect 401 Unauthorized)
+GET {{baseUrl}}/users/me
+
+### 9.3 Invalid Worker ID Returns 404 (Expect 404 Not Found)
+GET {{baseUrl}}/workers/invalid_nonexistent_id_999
+
+### 9.4 Privilege Escalation in Registration Blocked (Expect 400 Bad Request)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "hacker@example.com",
+  "password": "Password123!",
+  "role": "admin"
+}
