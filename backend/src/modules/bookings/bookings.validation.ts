@@ -59,3 +59,33 @@ export const cancelBookingSchema = z.object({
   cancellation_reason: z.string().trim().max(255).optional(),
   cancellationReason: z.string().trim().max(255).optional(),
 });
+
+export const verifyQrSchema = z
+  .object({
+    verification_code: z.string().trim().optional(),
+    verificationCode: z.string().trim().optional(),
+    token: z.string().trim().optional(),
+    code: z.string().trim().optional(),
+    qrPayload: z
+      .object({
+        bookingId: z.string().optional(),
+        customerId: z.string().optional(),
+        workerId: z.string().optional(),
+        verificationHash: z.string().optional(),
+      })
+      .optional(),
+  })
+  .refine(
+    (data) =>
+      !!(
+        data.verification_code ||
+        data.verificationCode ||
+        data.token ||
+        data.code ||
+        data.qrPayload?.verificationHash
+      ),
+    {
+      message: 'Verification code or token is required',
+    }
+  );
+

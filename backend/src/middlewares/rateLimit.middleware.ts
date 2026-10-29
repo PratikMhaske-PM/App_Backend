@@ -17,16 +17,22 @@ import { sendError } from '../utils/apiResponse';
  *    to prevent attackers from spoofing X-Forwarded-For headers.
  */
 
-export const loginRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes window
-  limit: 5, // Maximum 5 requests per IP address in the window
-  standardHeaders: 'draft-7', // Return standard RateLimit-* headers
-  legacyHeaders: false, // Disable X-RateLimit-* headers
-  handler: (_req, res) => {
-    sendError(
-      res,
-      429,
-      'Too many login attempts from this IP. Please try again after 15 minutes.'
-    );
-  },
-});
+export function createLoginRateLimiter() {
+  return rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes window
+    limit: 5, // Maximum 5 requests per IP address in the window
+    standardHeaders: 'draft-6', // Return standard RateLimit-* headers
+    legacyHeaders: true, // Enable X-RateLimit-* headers
+    handler: (_req, res, _next, options) => {
+      res.setHeader('RateLimit-Limit', String(options?.limit ?? 5));
+      res.setHeader('RateLimit-Remaining', '0');
+      sendError(
+        res,
+        429,
+        'Too many login attempts from this IP. Please try again after 15 minutes.'
+      );
+    },
+  });
+}
+
+export const loginRateLimiter = createLoginRateLimiter();

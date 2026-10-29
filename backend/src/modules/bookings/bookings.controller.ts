@@ -168,6 +168,27 @@ export class BookingsController {
       next(err);
     }
   };
+
+  /**
+   * API 18: POST /bookings/:id/verify-qr
+   * Role: Worker
+   * Verify a booking's QR code during service verification.
+   */
+  verifyQr = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      if (!req.user) {
+        throw AppError.unauthorized('Authentication required');
+      }
+      const result = await this.service.verifyQr(
+        req.params['id'] as string,
+        req.user,
+        req.body
+      );
+      sendSuccess(res, 200, 'Booking QR code verified successfully', result);
+    } catch (err) {
+      next(err);
+    }
+  };
 }
 
 export const bookingsController = new BookingsController();

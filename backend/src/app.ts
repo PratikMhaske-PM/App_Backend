@@ -6,13 +6,18 @@ import pinoHttp from 'pino-http';
 import { env } from './config/env';
 import { errorHandler } from './middlewares/error.middleware';
 import { notFoundHandler } from './middlewares/notFound.middleware';
+import { addressesRouter } from './modules/addresses/addresses.routes';
 import { adminRouter } from './modules/admin/admin.routes';
 import { AuthController } from './modules/auth/auth.controller';
 import { createAuthRouter } from './modules/auth/auth.routes';
 import { AuthService } from './modules/auth/auth.service';
 import { bookingsRouter } from './modules/bookings/bookings.routes';
 import { categoriesRouter } from './modules/categories/categories.routes';
+import { jobsRouter } from './modules/jobs/jobs.routes';
+import { kycRouter } from './modules/kyc/kyc.routes';
+import { notificationsRouter } from './modules/notifications/notifications.routes';
 import { reviewsRouter } from './modules/reviews/reviews.routes';
+import { sosRouter } from './modules/sos/sos.routes';
 import { usersRouter } from './modules/users/users.routes';
 import { workersRouter } from './modules/workers/workers.routes';
 import { defaultUserRepository, IUserRepository } from './repositories/user.repo';
@@ -81,24 +86,49 @@ export function createApp(userRepo: IUserRepository = defaultUserRepository): Ex
           detail: 'GET /bookings/:id',
           cancel: 'PATCH /bookings/:id/cancel',
           qrCode: 'GET /bookings/:id/qr',
+          verifyQr: 'POST /bookings/:id/verify-qr',
           accept: 'PATCH /bookings/:id/accept',
           reject: 'PATCH /bookings/:id/reject',
           complete: 'PATCH /bookings/:id/complete',
         },
+        jobs: {
+          requests: 'GET /jobs/requests',
+          me: 'GET /jobs/me',
+          detail: 'GET /jobs/:id',
+          updateStatus: 'PATCH /jobs/:id/status',
+        },
+        addresses: {
+          list: 'GET /addresses',
+          create: 'POST /addresses',
+          update: 'PATCH /addresses/:id',
+          delete: 'DELETE /addresses/:id',
+        },
+        kyc: {
+          submit: 'POST /kyc/submit',
+          status: 'GET /kyc/status',
+          review: 'PATCH /admin/kyc/:id',
+        },
+        sos: {
+          alert: 'POST /sos',
+        },
+        notifications: {
+          list: 'GET /notifications',
+        },
         reviews: {
-          create: 'POST /api/reviews',
+          create: 'POST /api/reviews (or /reviews)',
           detail: 'GET /api/reviews/:id',
           update: 'PATCH /api/reviews/:id',
           delete: 'DELETE /api/reviews/:id',
         },
         users: {
-          profile: 'GET /api/users/me',
+          profile: 'GET /api/users/me (or /users/me)',
           updateProfile: 'PATCH /api/users/me',
           changePassword: 'PATCH /api/users/me/password',
         },
         admin: {
           workers: 'GET /api/admin/workers',
           verifyWorker: 'PATCH /api/admin/workers/:id/verify',
+          reviewKyc: 'PATCH /admin/kyc/:id',
           stats: 'GET /api/admin/stats',
         },
       },
@@ -125,22 +155,42 @@ export function createApp(userRepo: IUserRepository = defaultUserRepository): Ex
   app.use('/api/bookings', bookingsRouter);
   app.use('/bookings', bookingsRouter);
 
-  // 10. Mount Reviews module (dual mounted with and without /api)
+  // 10. Mount Worker Jobs module (dual mounted with and without /api)
+  app.use('/api/jobs', jobsRouter);
+  app.use('/jobs', jobsRouter);
+
+  // 11. Mount Addresses module (dual mounted with and without /api)
+  app.use('/api/addresses', addressesRouter);
+  app.use('/addresses', addressesRouter);
+
+  // 12. Mount Worker KYC module (dual mounted with and without /api)
+  app.use('/api/kyc', kycRouter);
+  app.use('/kyc', kycRouter);
+
+  // 13. Mount SOS Emergency module (dual mounted with and without /api)
+  app.use('/api/sos', sosRouter);
+  app.use('/sos', sosRouter);
+
+  // 14. Mount Notifications module (dual mounted with and without /api)
+  app.use('/api/notifications', notificationsRouter);
+  app.use('/notifications', notificationsRouter);
+
+  // 15. Mount Reviews module (dual mounted with and without /api)
   app.use('/api/reviews', reviewsRouter);
   app.use('/reviews', reviewsRouter);
 
-  // 11. Mount Users module (dual mounted with and without /api)
+  // 16. Mount Users module (dual mounted with and without /api)
   app.use('/api/users', usersRouter);
   app.use('/users', usersRouter);
 
-  // 12. Mount Admin module (dual mounted with and without /api)
+  // 17. Mount Admin module (dual mounted with and without /api)
   app.use('/api/admin', adminRouter);
   app.use('/admin', adminRouter);
 
-  // 13. Handle unmatched routes (404)
+  // 18. Handle unmatched routes (404)
   app.use(notFoundHandler);
 
-  // 14. Centralized error handling middleware (registered last)
+  // 19. Centralized error handling middleware (registered last)
   app.use(errorHandler);
 
   return app;

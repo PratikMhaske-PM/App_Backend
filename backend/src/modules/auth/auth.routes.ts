@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticateToken } from '../../middlewares/auth.middleware';
-import { loginRateLimiter } from '../../middlewares/rateLimit.middleware';
+import { createLoginRateLimiter } from '../../middlewares/rateLimit.middleware';
 import { validateBody } from '../../middlewares/validate.middleware';
 import { authController, AuthController } from './auth.controller';
 import { loginSchema, registerSchema } from './auth.validation';
@@ -8,7 +8,10 @@ import { loginSchema, registerSchema } from './auth.validation';
 /**
  * Creates and configures authentication router.
  */
-export function createAuthRouter(controller: AuthController = authController): Router {
+export function createAuthRouter(
+  controller: AuthController = authController,
+  limiter = createLoginRateLimiter()
+): Router {
   const router = Router();
 
   /**
@@ -17,7 +20,7 @@ export function createAuthRouter(controller: AuthController = authController): R
    */
   router.post(
     '/register',
-    loginRateLimiter,
+    limiter,
     validateBody(registerSchema),
     controller.register
   );
@@ -28,7 +31,7 @@ export function createAuthRouter(controller: AuthController = authController): R
    */
   router.post(
     '/login',
-    loginRateLimiter,
+    limiter,
     validateBody(loginSchema),
     controller.login
   );

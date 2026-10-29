@@ -140,3 +140,71 @@ export interface WorkerStats {
   averageRating: number;
   totalReviews: number;
 }
+
+/**
+ * Domain representation of a User Address.
+ */
+export interface Address {
+  id: string;
+  userId: string;
+  label?: string; // e.g. "Home", "Work"
+  street: string;
+  city: string;
+  state?: string;
+  postalCode?: string;
+  country?: string;
+  isDefault?: boolean;
+  latitude?: number;
+  longitude?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Domain representation of a Worker KYC application.
+ */
+export interface KycApplication {
+  id: string;
+  workerId: string;
+  documentType: 'id_card' | 'passport' | 'driving_license' | string;
+  documentNumber: string;
+  fullName: string;
+  documentUrl?: string;
+  expiryDate?: string;
+  status: 'pending' | 'approved' | 'rejected' | string;
+  rejectionReason?: string;
+  submittedAt: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+}
+
+/**
+ * Domain representation of an SOS Emergency Alert.
+ */
+export interface SosAlert {
+  id: string;
+  userId: string;
+  emergencyType: string;
+  latitude?: number;
+  longitude?: number;
+  bookingId?: string;
+  notes?: string;
+  status: 'active' | 'acknowledged' | 'resolved';
+  createdAt: string;
+}
+
+/**
+ * Domain representation of a User Notification.
+ */
+export interface Notification {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  type: 'info' | 'booking' | 'alert' | 'system' | string;
+  isRead: boolean;
+  readAt?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+

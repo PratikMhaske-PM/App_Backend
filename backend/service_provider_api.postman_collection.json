@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "Service Provider Application API Suite",
-    "description": "Comprehensive Postman test collection covering all Authentication, Categories, Workers, Bookings, Reviews, User Profile, and Admin APIs with test assertions.",
+    "name": "Fixmate - Service Provider Application API Suite",
+    "description": "Comprehensive Postman test collection covering all Authentication, Categories, Workers, Bookings Lifecycle, Jobs, Reviews, User Profile, Addresses, KYC, Admin, SOS Emergency, and Notifications endpoints with automated test assertions and token chaining.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -31,14 +31,46 @@
       "type": "string"
     },
     {
+      "key": "cancelBookingId",
+      "value": "",
+      "type": "string"
+    },
+    {
       "key": "reviewId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "addressId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "kycId",
       "value": "",
       "type": "string"
     }
   ],
   "item": [
     {
-      "name": "1. Health Check",
+      "name": "01. Health Check",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('API is up and healthy', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [],
@@ -50,13 +82,31 @@
       }
     },
     {
-      "name": "2. Auth - Register Customer",
+      "name": "02. Auth - Register Customer (New Account)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test('Registration successful with JWT tokens', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.accessToken).to.be.a('string');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [{ "key": "Content-Type", "value": "application/json" }],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"email\": \"sarah.test@example.com\",\n  \"password\": \"SecurePassword123!\",\n  \"name\": \"Sarah Test\",\n  \"phone\": \"+1-555-0155\",\n  \"role\": \"customer\"\n}"
+          "raw": "{\n  \"email\": \"customer_{{$timestamp}}@example.com\",\n  \"password\": \"SecurePassword123!\",\n  \"name\": \"Sarah Test\",\n  \"phone\": \"+1-555-0155\",\n  \"role\": \"customer\"\n}"
         },
         "url": {
           "raw": "{{baseUrl}}/api/auth/register",
@@ -66,16 +116,21 @@
       }
     },
     {
-      "name": "3. Auth - Login Customer",
+      "name": "03. Auth - Login Customer",
       "event": [
         {
           "listen": "test",
           "script": {
             "exec": [
-              "var jsonData = pm.response.json();",
-              "if (jsonData.data && jsonData.data.accessToken) {",
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Customer logged in and token saved', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.accessToken).to.be.a('string');",
               "    pm.collectionVariables.set('customerToken', jsonData.data.accessToken);",
-              "}"
+              "});"
             ],
             "type": "text/javascript"
           }
@@ -96,16 +151,21 @@
       }
     },
     {
-      "name": "4. Auth - Login Worker",
+      "name": "04. Auth - Login Worker",
       "event": [
         {
           "listen": "test",
           "script": {
             "exec": [
-              "var jsonData = pm.response.json();",
-              "if (jsonData.data && jsonData.data.accessToken) {",
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Worker logged in and token saved', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.accessToken).to.be.a('string');",
               "    pm.collectionVariables.set('workerToken', jsonData.data.accessToken);",
-              "}"
+              "});"
             ],
             "type": "text/javascript"
           }
@@ -126,16 +186,21 @@
       }
     },
     {
-      "name": "5. Auth - Login Admin",
+      "name": "05. Auth - Login Admin",
       "event": [
         {
           "listen": "test",
           "script": {
             "exec": [
-              "var jsonData = pm.response.json();",
-              "if (jsonData.data && jsonData.data.accessToken) {",
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Admin logged in and token saved', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.accessToken).to.be.a('string');",
               "    pm.collectionVariables.set('adminToken', jsonData.data.accessToken);",
-              "}"
+              "});"
             ],
             "type": "text/javascript"
           }
@@ -156,7 +221,57 @@
       }
     },
     {
-      "name": "6. Categories - List All",
+      "name": "06. Auth - Profile Context (/me)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('User payload returned without password', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.email).to.be.a('string');",
+              "    pm.expect(jsonData.data.password).to.be.undefined;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/me",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "me"]
+        }
+      }
+    },
+    {
+      "name": "07. Categories - List All",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Returns list of service categories', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data).to.be.an('array');",
+              "    pm.expect(jsonData.data.length).to.be.above(0);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [],
@@ -168,7 +283,24 @@
       }
     },
     {
-      "name": "7. Categories - Detail",
+      "name": "08. Categories - Detail by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Category matches requested ID', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.id).to.eql('cat_electrical');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [],
@@ -180,7 +312,24 @@
       }
     },
     {
-      "name": "8. Workers - Search and Filter",
+      "name": "09. Workers - Search and Filter",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Returns filtered workers list', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [],
@@ -197,7 +346,24 @@
       }
     },
     {
-      "name": "9. Workers - Detail",
+      "name": "10. Workers - Profile Detail",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Returns worker details', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.id).to.eql('wrk_demo_1');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [],
@@ -209,7 +375,53 @@
       }
     },
     {
-      "name": "10. Workers - Update Availability",
+      "name": "11. Workers - Reviews List",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Returns reviews array', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/workers/wrk_demo_1/reviews",
+          "host": ["{{baseUrl}}"],
+          "path": ["workers", "wrk_demo_1", "reviews"]
+        }
+      }
+    },
+    {
+      "name": "12. Workers - Update Availability (Worker)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Availability successfully updated', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "PATCH",
         "header": [
@@ -228,7 +440,24 @@
       }
     },
     {
-      "name": "11. Workers - Dashboard Stats",
+      "name": "13. Workers - Dashboard Stats (Worker)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Returns metrics object', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data).to.have.property('total_bookings');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [
@@ -242,16 +471,21 @@
       }
     },
     {
-      "name": "12. API 1: Create Booking (POST /bookings)",
+      "name": "14. Bookings - Create Booking (POST /bookings)",
       "event": [
         {
           "listen": "test",
           "script": {
             "exec": [
-              "var jsonData = pm.response.json();",
-              "if (jsonData.data && jsonData.data.id) {",
+              "pm.test('Status code is 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test('Booking created and bookingId captured', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.id).to.be.a('string');",
               "    pm.collectionVariables.set('bookingId', jsonData.data.id);",
-              "}"
+              "});"
             ],
             "type": "text/javascript"
           }
@@ -265,7 +499,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"worker_id\": \"wrk_demo_1\",\n  \"category_id\": \"cat_electrical\",\n  \"service_description\": \"Fix flickering lights and circuit inspection\",\n  \"booking_date\": \"2026-11-25\",\n  \"booking_time\": \"10:00\",\n  \"address\": \"742 Evergreen Terrace, Springfield\",\n  \"latitude\": 40.7128,\n  \"longitude\": -74.006,\n  \"total_price\": 70.0\n}"
+          "raw": "{\n  \"worker_id\": \"wrk_demo_1\",\n  \"category_id\": \"cat_electrical\",\n  \"service_description\": \"Fix electrical switches and fuse box\",\n  \"booking_date\": \"2026-11-25\",\n  \"booking_time\": \"10:00\",\n  \"address\": \"742 Evergreen Terrace, Springfield\",\n  \"latitude\": 40.7128,\n  \"longitude\": -74.006,\n  \"total_price\": 70.0\n}"
         },
         "url": {
           "raw": "{{baseUrl}}/bookings",
@@ -275,7 +509,24 @@
       }
     },
     {
-      "name": "13. API 2: Get My Bookings (GET /bookings/me)",
+      "name": "15. Bookings - Customer Bookings List (GET /bookings/me)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Returns list of customer bookings', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [
@@ -294,7 +545,24 @@
       }
     },
     {
-      "name": "14. API 3: Get Booking Details (GET /bookings/:id)",
+      "name": "16. Bookings - Booking Details (GET /bookings/:id)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Matches requested booking ID', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.id).to.eql(pm.collectionVariables.get('bookingId'));",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [
@@ -308,7 +576,24 @@
       }
     },
     {
-      "name": "15. API 5: Get Booking QR Code (GET /bookings/:id/qr)",
+      "name": "17. Bookings - Get QR Code (GET /bookings/:id/qr)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Returns valid QR payload', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data).to.have.property('qr_code');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [
@@ -322,26 +607,55 @@
       }
     },
     {
-      "name": "16. API 4: Cancel Booking (PATCH /bookings/:id/cancel)",
+      "name": "18. Jobs - Available Requests (GET /jobs/requests)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Returns available job requests', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
-        "method": "PATCH",
+        "method": "GET",
         "header": [
-          { "key": "Authorization", "value": "Bearer {{customerToken}}" },
-          { "key": "Content-Type", "value": "application/json" }
+          { "key": "Authorization", "value": "Bearer {{workerToken}}" }
         ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"cancellation_reason\": \"Emergency travel schedule change\"\n}"
-        },
         "url": {
-          "raw": "{{baseUrl}}/bookings/{{bookingId}}/cancel",
+          "raw": "{{baseUrl}}/jobs/requests?page=1&limit=10",
           "host": ["{{baseUrl}}"],
-          "path": ["bookings", "{{bookingId}}", "cancel"]
+          "path": ["jobs", "requests"]
         }
       }
     },
     {
-      "name": "17. Bookings - Accept (Worker)",
+      "name": "19. Bookings - Accept Booking (PATCH /bookings/:id/accept)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Booking status changed to CONFIRMED', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.status.toUpperCase()).to.eql('CONFIRMED');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "PATCH",
         "header": [
@@ -355,7 +669,158 @@
       }
     },
     {
-      "name": "18. Bookings - Complete (Worker)",
+      "name": "20. Jobs - Worker Assigned Jobs (GET /jobs/me)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Returns worker assigned jobs', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{workerToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/jobs/me?page=1&limit=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["jobs", "me"]
+        }
+      }
+    },
+    {
+      "name": "21. Jobs - Job Details (GET /jobs/:id)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Returns job details', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.id).to.eql(pm.collectionVariables.get('bookingId'));",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{workerToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/jobs/{{bookingId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["jobs", "{{bookingId}}"]
+        }
+      }
+    },
+    {
+      "name": "22. Jobs - Update Status to In-Progress (PATCH /jobs/:id/status)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Job status updated to in_progress', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{workerToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"in_progress\",\n  \"note\": \"Started electrical diagnostic on site\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/jobs/{{bookingId}}/status",
+          "host": ["{{baseUrl}}"],
+          "path": ["jobs", "{{bookingId}}", "status"]
+        }
+      }
+    },
+    {
+      "name": "23. Bookings - Verify QR Code (POST /bookings/:id/verify-qr)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('QR code verified successfully', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{workerToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"token\": \"QR_{{bookingId}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/bookings/{{bookingId}}/verify-qr",
+          "host": ["{{baseUrl}}"],
+          "path": ["bookings", "{{bookingId}}", "verify-qr"]
+        }
+      }
+    },
+    {
+      "name": "24. Bookings - Complete Booking (PATCH /bookings/:id/complete)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Booking status is COMPLETED', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.status.toUpperCase()).to.eql('COMPLETED');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "PATCH",
         "header": [
@@ -369,16 +834,21 @@
       }
     },
     {
-      "name": "16. Reviews - Submit for Completed Booking",
+      "name": "25. Reviews - Submit Review for Completed Booking (POST /reviews)",
       "event": [
         {
           "listen": "test",
           "script": {
             "exec": [
-              "var jsonData = pm.response.json();",
-              "if (jsonData.data && jsonData.data.id) {",
+              "pm.test('Status code is 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test('Review created and reviewId captured', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.id).to.be.a('string');",
               "    pm.collectionVariables.set('reviewId', jsonData.data.id);",
-              "}"
+              "});"
             ],
             "type": "text/javascript"
           }
@@ -392,29 +862,172 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"booking_id\": \"{{bookingId}}\",\n  \"rating\": 5,\n  \"comment\": \"Outstanding service, on time and high quality work!\"\n}"
+          "raw": "{\n  \"booking_id\": \"{{bookingId}}\",\n  \"rating\": 5,\n  \"comment\": \"Outstanding service, on time and high quality electrical work!\"\n}"
         },
         "url": {
-          "raw": "{{baseUrl}}/api/reviews",
+          "raw": "{{baseUrl}}/reviews",
           "host": ["{{baseUrl}}"],
-          "path": ["api", "reviews"]
+          "path": ["reviews"]
         }
       }
     },
     {
-      "name": "17. Reviews - Detail",
+      "name": "26. Reviews - Get Review Detail (GET /reviews/:id)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Returns review details', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.id).to.eql(pm.collectionVariables.get('reviewId'));",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{baseUrl}}/api/reviews/{{reviewId}}",
+          "raw": "{{baseUrl}}/reviews/{{reviewId}}",
           "host": ["{{baseUrl}}"],
-          "path": ["api", "reviews", "{{reviewId}}"]
+          "path": ["reviews", "{{reviewId}}"]
         }
       }
     },
     {
-      "name": "18. Users - Profile Me",
+      "name": "27. Reviews - Update Review (PATCH /reviews/:id)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Review updated successfully', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.comment).to.include('Updated');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{customerToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Updated: Outstanding service, truly top tier technician!\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/reviews/{{reviewId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["reviews", "{{reviewId}}"]
+        }
+      }
+    },
+    {
+      "name": "28. Bookings - Create Booking To Cancel (POST /bookings)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test('Secondary booking created for cancel test', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.id).to.be.a('string');",
+              "    pm.collectionVariables.set('cancelBookingId', jsonData.data.id);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{customerToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"worker_id\": \"wrk_demo_1\",\n  \"category_id\": \"cat_electrical\",\n  \"service_description\": \"Inspection booking intended to test cancellation flow\",\n  \"booking_date\": \"2026-11-28\",\n  \"booking_time\": \"14:00\",\n  \"address\": \"100 Cancellation Road, Springfield\",\n  \"total_price\": 50.0\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/bookings",
+          "host": ["{{baseUrl}}"],
+          "path": ["bookings"]
+        }
+      }
+    },
+    {
+      "name": "29. Bookings - Cancel Booking (PATCH /bookings/:id/cancel)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Booking successfully cancelled', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.status.toUpperCase()).to.eql('CANCELLED');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{customerToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cancellation_reason\": \"Emergency travel schedule change\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/bookings/{{cancelBookingId}}/cancel",
+          "host": ["{{baseUrl}}"],
+          "path": ["bookings", "{{cancelBookingId}}", "cancel"]
+        }
+      }
+    },
+    {
+      "name": "30. Users - Profile Me (GET /users/me)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Returns authenticated user profile', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data).to.have.property('email');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [
@@ -428,7 +1041,368 @@
       }
     },
     {
-      "name": "19. Admin - System Stats",
+      "name": "31. Users - Update Profile (PATCH /users/me)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Profile updated successfully', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{customerToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Jane Customer\",\n  \"phone\": \"+1-555-0999\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/users/me",
+          "host": ["{{baseUrl}}"],
+          "path": ["users", "me"]
+        }
+      }
+    },
+    {
+      "name": "32. Addresses - Create Address (POST /addresses)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test('Address created and addressId captured', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.id).to.be.a('string');",
+              "    pm.collectionVariables.set('addressId', jsonData.data.id);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{customerToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"label\": \"Home\",\n  \"street\": \"123 Main Street\",\n  \"city\": \"Springfield\",\n  \"state\": \"IL\",\n  \"postal_code\": \"62704\",\n  \"is_default\": true\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/addresses",
+          "host": ["{{baseUrl}}"],
+          "path": ["addresses"]
+        }
+      }
+    },
+    {
+      "name": "33. Addresses - List Addresses (GET /addresses)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Returns list of user addresses', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/addresses",
+          "host": ["{{baseUrl}}"],
+          "path": ["addresses"]
+        }
+      }
+    },
+    {
+      "name": "34. Addresses - Update Address (PATCH /addresses/:id)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Address updated successfully', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{customerToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"street\": \"123 Main Street, Suite 500\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/addresses/{{addressId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["addresses", "{{addressId}}"]
+        }
+      }
+    },
+    {
+      "name": "35. Addresses - Delete Address (DELETE /addresses/:id)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Address deleted successfully', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/addresses/{{addressId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["addresses", "{{addressId}}"]
+        }
+      }
+    },
+    {
+      "name": "36. KYC - Worker Submit (POST /kyc/submit)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test('KYC submission saved and kycId captured', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.data.id).to.be.a('string');",
+              "    pm.collectionVariables.set('kycId', jsonData.data.id);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{workerToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"document_type\": \"passport\",\n  \"document_number\": \"P-{{$timestamp}}\",\n  \"full_name\": \"Alex Rodriguez\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/kyc/submit",
+          "host": ["{{baseUrl}}"],
+          "path": ["kyc", "submit"]
+        }
+      }
+    },
+    {
+      "name": "37. KYC - Worker Status (GET /kyc/status)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Returns KYC status record', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data).to.have.property('status');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{workerToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/kyc/status",
+          "host": ["{{baseUrl}}"],
+          "path": ["kyc", "status"]
+        }
+      }
+    },
+    {
+      "name": "38. KYC - Admin Review (PATCH /admin/kyc/:id)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('KYC review status updated to approved', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.status).to.eql('approved');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"approved\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/admin/kyc/{{kycId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["admin", "kyc", "{{kycId}}"]
+        }
+      }
+    },
+    {
+      "name": "39. Admin - Workers List (GET /admin/workers)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Returns list of workers for administration', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/admin/workers",
+          "host": ["{{baseUrl}}"],
+          "path": ["admin", "workers"]
+        }
+      }
+    },
+    {
+      "name": "40. Admin - Verify Worker (PATCH /admin/workers/:id/verify)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Worker verification approved', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.verification_status).to.eql('approved');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"approved\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/admin/workers/wrk_demo_1/verify",
+          "host": ["{{baseUrl}}"],
+          "path": ["admin", "workers", "wrk_demo_1", "verify"]
+        }
+      }
+    },
+    {
+      "name": "41. Admin - System Stats (GET /admin/stats)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Returns platform stats', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data).to.have.property('total_users');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [
@@ -438,6 +1412,78 @@
           "raw": "{{baseUrl}}/admin/stats",
           "host": ["{{baseUrl}}"],
           "path": ["admin", "stats"]
+        }
+      }
+    },
+    {
+      "name": "42. SOS - Emergency Alert (POST /sos)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test('Emergency alert dispatched', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{customerToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"emergency_type\": \"security\",\n  \"notes\": \"Urgent emergency alert dispatched from Postman\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/sos",
+          "host": ["{{baseUrl}}"],
+          "path": ["sos"]
+        }
+      }
+    },
+    {
+      "name": "43. Notifications - List (GET /notifications)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Returns notifications list', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/notifications?status=all&page=1&limit=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["notifications"],
+          "query": [
+            { "key": "status", "value": "all" },
+            { "key": "page", "value": "1" },
+            { "key": "limit", "value": "10" }
+          ]
         }
       }
     }

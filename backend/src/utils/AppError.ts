@@ -37,6 +37,10 @@ export class AppError extends Error {
     return new AppError(message, 404, true);
   }
 
+  static conflict(message: string = 'Conflict'): AppError {
+    return new AppError(message, 409, true);
+  }
+
   static tooManyRequests(message: string = 'Too many requests. Please try again later.'): AppError {
     return new AppError(message, 429, true);
   }

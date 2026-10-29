@@ -11,6 +11,7 @@ import {
   cancelBookingSchema,
   createBookingSchema,
   getMyBookingsQuerySchema,
+  verifyQrSchema,
 } from './bookings.validation';
 
 export function createBookingsRouter(
@@ -62,6 +63,19 @@ export function createBookingsRouter(
     requireRole('customer', 'user'),
     validateParams(bookingIdParamSchema),
     controller.getQrCode
+  );
+
+  /**
+   * API 18: POST /bookings/:id/verify-qr
+   * Role: worker
+   * Verify booking QR code upon job service execution.
+   */
+  router.post(
+    '/:id/verify-qr',
+    requireRole('worker'),
+    validateParams(bookingIdParamSchema),
+    validateBody(verifyQrSchema),
+    controller.verifyQr
   );
 
   /**

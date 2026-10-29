@@ -323,7 +323,149 @@ Authorization: Bearer {{adminToken}}
 Accept: application/json
 
 ###############################################################################
-# 9. NEGATIVE SECURITY TESTS
+# 9. WORKER JOBS & QR VERIFICATION (Module A)
+###############################################################################
+
+### 9.1 Fetch Available Job Requests (Worker Only)
+GET {{baseUrl}}/jobs/requests?page=1&limit=10
+Authorization: Bearer {{workerToken}}
+Accept: application/json
+
+### 9.2 Fetch Worker Assigned Jobs History (Worker Only)
+GET {{baseUrl}}/jobs/me?page=1&limit=10
+Authorization: Bearer {{workerToken}}
+Accept: application/json
+
+### 9.3 Fetch Job Details by ID (Worker Only)
+GET {{baseUrl}}/jobs/{{bookingId}}
+Authorization: Bearer {{workerToken}}
+Accept: application/json
+
+### 9.4 Update Job Status (Worker Only)
+PATCH {{baseUrl}}/jobs/{{bookingId}}/status
+Authorization: Bearer {{workerToken}}
+Content-Type: application/json
+
+{
+  "status": "in_progress",
+  "note": "Worker arrived on site and started service."
+}
+
+### 9.5 Verify Booking QR Code (Worker Only)
+POST {{baseUrl}}/bookings/{{bookingId}}/verify-qr
+Authorization: Bearer {{workerToken}}
+Content-Type: application/json
+
+{
+  "token": "QR_{{bookingId}}"
+}
+
+###############################################################################
+# 10. ADDRESS MANAGEMENT (Module D)
+###############################################################################
+
+### 10.1 List User Addresses
+GET {{baseUrl}}/addresses
+Authorization: Bearer {{customerToken}}
+Accept: application/json
+
+### 10.2 Add New Address
+# @name createAddress
+POST {{baseUrl}}/addresses
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "label": "Apartment",
+  "street": "123 Main Street, Suite 400",
+  "city": "Springfield",
+  "state": "IL",
+  "postal_code": "62704",
+  "country": "USA",
+  "is_default": true,
+  "latitude": 40.7128,
+  "longitude": -74.0060
+}
+
+### Save address ID
+@addressId = {{createAddress.response.body.data.id}}
+
+### 10.3 Update Existing Address
+PATCH {{baseUrl}}/addresses/{{addressId}}
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "street": "123 Main Street, Suite 405",
+  "label": "Updated Home"
+}
+
+### 10.4 Delete Address
+DELETE {{baseUrl}}/addresses/{{addressId}}
+Authorization: Bearer {{customerToken}}
+Accept: application/json
+
+###############################################################################
+# 11. WORKER KYC (Module E)
+###############################################################################
+
+### 11.1 Worker Submits KYC Verification
+# @name submitKyc
+POST {{baseUrl}}/kyc/submit
+Authorization: Bearer {{workerToken}}
+Content-Type: application/json
+
+{
+  "document_type": "passport",
+  "document_number": "P-987654321",
+  "full_name": "Alex Rodriguez",
+  "document_url": "https://example.com/docs/passport.pdf"
+}
+
+### Save KYC ID
+@kycId = {{submitKyc.response.body.data.id}}
+
+### 11.2 Worker Checks KYC Status
+GET {{baseUrl}}/kyc/status
+Authorization: Bearer {{workerToken}}
+Accept: application/json
+
+### 11.3 Admin Reviews & Approves KYC
+PATCH {{baseUrl}}/admin/kyc/{{kycId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "approved"
+}
+
+###############################################################################
+# 12. SOS EMERGENCY ALERTS (Module F)
+###############################################################################
+
+### 12.1 Submit SOS Emergency Alert
+POST {{baseUrl}}/sos
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "emergency_type": "security",
+  "latitude": 40.7128,
+  "longitude": -74.0060,
+  "notes": "Emergency incident during home service visit"
+}
+
+###############################################################################
+# 13. NOTIFICATIONS (Module G)
+###############################################################################
+
+### 13.1 Retrieve User Notifications
+GET {{baseUrl}}/notifications?status=all&page=1&limit=10
+Authorization: Bearer {{customerToken}}
+Accept: application/json
+
+###############################################################################
+# 14. NEGATIVE SECURITY TESTS
 ###############################################################################
 
 ### 9.1 Non-Admin Blocked from Admin Endpoints (Expect 403 Forbidden)

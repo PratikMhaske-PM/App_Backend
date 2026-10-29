@@ -41,4 +41,17 @@ export interface CancelBookingInput {
   cancellationReason?: string;
 }
 
+export interface VerifyQrInput {
+  verification_code?: string;
+  verificationCode?: string;
+  token?: string;
+  code?: string;
+  qrPayload?: {
+    bookingId?: string;
+    customerId?: string;
+    workerId?: string;
+    verificationHash?: string;
+  };
+}
+
 export type BookingQrResponseData = QrCodeResult;

@@ -6,6 +6,7 @@ import { AppError } from '../utils/AppError';
 export interface BookingFilterOptions {
   customerId?: string;
   workerId?: string;
+  categoryId?: string;
   status?: string;
   page?: number;
   limit?: number;
@@ -192,6 +193,11 @@ export class BookingRepository implements IBookingRepository {
       params.push(filters.workerId);
     }
 
+    if (filters.categoryId) {
+      whereClauses.push('b.category_id = ?');
+      params.push(filters.categoryId);
+    }
+
     if (filters.status) {
       // Support case-insensitive status matching (e.g. 'PENDING' or 'pending')
       whereClauses.push('LOWER(b.status) = LOWER(?)');
@@ -237,6 +243,11 @@ export class BookingRepository implements IBookingRepository {
     if (filters.workerId) {
       whereClauses.push('worker_id = ?');
       params.push(filters.workerId);
+    }
+
+    if (filters.categoryId) {
+      whereClauses.push('category_id = ?');
+      params.push(filters.categoryId);
     }
 
     if (filters.status) {

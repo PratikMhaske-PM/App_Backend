@@ -400,6 +400,130 @@ Platform overview statistics (total users, workers, bookings, revenue).
 
 ---
 
+### 7. Worker Jobs Module (Module A)
+
+#### `GET /jobs/requests?status=&page=&limit=`
+Retrieve open/requested service jobs within worker's category. Sanitizes customer sensitive information.
+- **Auth**: Bearer token (`worker` role)
+
+#### `GET /jobs/me?status=&page=&limit=`
+Retrieve jobs assigned to authenticated worker with history and pagination.
+- **Auth**: Bearer token (`worker` role)
+
+#### `GET /jobs/:id`
+Retrieve detailed information for a specific job. Enforces worker assignment verification.
+- **Auth**: Bearer token (`worker` role)
+
+#### `PATCH /jobs/:id/status`
+Update job status through strict state machine transitions (`pending` -> `confirmed`/`accepted` -> `in_progress` -> `completed`).
+- **Auth**: Bearer token (`worker` role)
+- **Body**:
+  ```json
+  {
+    "status": "in_progress",
+    "note": "Arrived on location"
+  }
+  ```
+
+#### `POST /bookings/:id/verify-qr`
+Worker scans and verifies customer booking QR code token. Prevents replay and duplicate scans.
+- **Auth**: Bearer token (`worker` role)
+- **Body**:
+  ```json
+  {
+    "token": "QR_bkg_12345"
+  }
+  ```
+
+---
+
+### 8. Address Management (Module D)
+
+#### `GET /addresses?page=&limit=`
+Retrieve authenticated user's saved addresses.
+- **Auth**: Bearer token (All authenticated users)
+
+#### `POST /addresses`
+Create an address attached to the authenticated user.
+- **Auth**: Bearer token (All authenticated users)
+- **Body**:
+  ```json
+  {
+    "label": "Home",
+    "street": "123 Main Street",
+    "city": "Springfield",
+    "state": "IL",
+    "postal_code": "62704",
+    "is_default": true
+  }
+  ```
+
+#### `PATCH /addresses/:id`
+Update an address enforcing user ownership check.
+- **Auth**: Bearer token (Owner user only)
+
+#### `DELETE /addresses/:id`
+Delete an address enforcing user ownership check.
+- **Auth**: Bearer token (Owner user only)
+
+---
+
+### 9. Worker KYC Verification (Module E)
+
+#### `POST /kyc/submit`
+Worker submits identity verification document. Sets initial status to `pending` and prevents duplicate pending applications.
+- **Auth**: Bearer token (`worker` role)
+- **Body**:
+  ```json
+  {
+    "document_type": "passport",
+    "document_number": "P-987654321",
+    "full_name": "Alex Rodriguez",
+    "document_url": "https://example.com/docs/passport.pdf"
+  }
+  ```
+
+#### `GET /kyc/status`
+Worker checks KYC verification status.
+- **Auth**: Bearer token (`worker` role)
+
+#### `PATCH /admin/kyc/:id`
+Administrator reviews and approves or rejects worker KYC application. Blocks self-approval.
+- **Auth**: Bearer token (`admin` role)
+- **Body**:
+  ```json
+  {
+    "status": "approved"
+  }
+  ```
+
+---
+
+### 10. SOS Emergency Alerts (Module F)
+
+#### `POST /sos`
+Dispatch an emergency alert during home service visits with rate limiting and duplicate prevention.
+- **Auth**: Bearer token (All authenticated users)
+- **Body**:
+  ```json
+  {
+    "emergency_type": "security",
+    "latitude": 40.7128,
+    "longitude": -74.0060,
+    "notes": "Immediate assistance requested"
+  }
+  ```
+
+---
+
+### 11. Notifications (Module G)
+
+#### `GET /notifications?status=all&page=&limit=`
+Retrieve authenticated user's notifications. Supports read/unread filtering.
+- **Auth**: Bearer token (All authenticated users)
+
+---
+
 ## 🧪 Pre-Seeded Accounts for Immediate Testing
 
 You can test immediately with these pre-seeded accounts:

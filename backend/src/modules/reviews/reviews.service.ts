@@ -36,7 +36,7 @@ export class ReviewsService {
       throw AppError.forbidden('Only the customer who made the booking can submit a review');
     }
 
-    if (booking.status !== 'completed') {
+    if (booking.status.toLowerCase() !== 'completed') {
       throw AppError.badRequest(
         `Reviews can only be submitted for completed bookings. Current status: '${booking.status}'`
       );

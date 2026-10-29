@@ -370,10 +370,117 @@ export async function runAllApiTests(): Promise<TestResult[]> {
     '/api/auth/login',
     400,
     () =>
-      request(app).post('/api/auth/login').send({
+      request(createApp()).post('/api/auth/login').send({
         email: 'invalid-email-format',
         password: 'Password123!',
       })
+  );
+
+  // 33. Worker Jobs: Fetch Available Requests
+  await testApi('Worker Jobs: Fetch Requests', 'GET', '/jobs/requests', 200, () =>
+    request(app).get('/jobs/requests').set('Authorization', `Bearer ${demoWorkerToken}`)
+  );
+
+  // 34. Worker Jobs: Fetch Assigned Jobs
+  await testApi('Worker Jobs: Fetch My Jobs', 'GET', '/jobs/me', 200, () =>
+    request(app).get('/jobs/me').set('Authorization', `Bearer ${demoWorkerToken}`)
+  );
+
+  // 35. Worker QR Verification
+  await testApi('Bookings: Verify QR Token', 'POST', `/bookings/${bookingId}/verify-qr`, 200, () =>
+    request(app)
+      .post(`/bookings/${bookingId}/verify-qr`)
+      .set('Authorization', `Bearer ${demoWorkerToken}`)
+      .send({ token: `QR_${bookingId}` })
+  );
+
+  // 36. Addresses: Create Address
+  let newAddressId = '';
+  await testApi('Addresses: Create Address', 'POST', '/addresses', 201, () =>
+    request(app)
+      .post('/addresses')
+      .set('Authorization', `Bearer ${customerToken}`)
+      .send({
+        label: 'Home',
+        street: '123 Test Boulevard',
+        city: 'Metropolis',
+        state: 'NY',
+        postal_code: '10001',
+      }),
+    (body) => {
+      newAddressId = body.data?.id;
+      return !!newAddressId;
+    }
+  );
+
+  // 37. Addresses: List User Addresses
+  await testApi('Addresses: List Addresses', 'GET', '/addresses', 200, () =>
+    request(app).get('/addresses').set('Authorization', `Bearer ${customerToken}`)
+  );
+
+  // 38. Addresses: Update Address
+  if (newAddressId) {
+    await testApi('Addresses: Update Address', 'PATCH', `/addresses/${newAddressId}`, 200, () =>
+      request(app)
+        .patch(`/addresses/${newAddressId}`)
+        .set('Authorization', `Bearer ${customerToken}`)
+        .send({ label: 'Updated Home' })
+    );
+
+    // 39. Addresses: Delete Address
+    await testApi('Addresses: Delete Address', 'DELETE', `/addresses/${newAddressId}`, 200, () =>
+      request(app)
+        .delete(`/addresses/${newAddressId}`)
+        .set('Authorization', `Bearer ${customerToken}`)
+    );
+  }
+
+  // 40. KYC: Worker Submits Verification
+  let createdKycId = '';
+  await testApi('KYC: Submit Verification', 'POST', '/kyc/submit', 201, () =>
+    request(app)
+      .post('/kyc/submit')
+      .set('Authorization', `Bearer ${demoWorkerToken}`)
+      .send({
+        document_type: 'passport',
+        document_number: 'P-55443322',
+        full_name: 'Alex Rodriguez',
+      }),
+    (body) => {
+      createdKycId = body.data?.id;
+      return !!createdKycId;
+    }
+  );
+
+  // 41. KYC: Worker Checks Status
+  await testApi('KYC: Check Status', 'GET', '/kyc/status', 200, () =>
+    request(app).get('/kyc/status').set('Authorization', `Bearer ${demoWorkerToken}`)
+  );
+
+  // 42. KYC: Admin Reviews KYC
+  if (createdKycId) {
+    await testApi('KYC: Admin Approval', 'PATCH', `/admin/kyc/${createdKycId}`, 200, () =>
+      request(app)
+        .patch(`/admin/kyc/${createdKycId}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ status: 'approved' })
+    );
+  }
+
+  // 43. SOS: Create Emergency Alert
+  await testApi('SOS: Dispatch Alert', 'POST', '/sos', 201, () =>
+    request(app)
+      .post('/sos')
+      .set('Authorization', `Bearer ${customerToken}`)
+      .send({
+        emergency_type: 'accident',
+        notes: 'Testing emergency SOS alert',
+      })
+  );
+
+  // 44. Notifications: Retrieve User Notifications
+  await testApi('Notifications: List Notifications', 'GET', '/notifications', 200, () =>
+    request(app).get('/notifications').set('Authorization', `Bearer ${customerToken}`)
   );
 
   return results;
